@@ -1,0 +1,52 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one or more
+#  contributor license agreements.  See the NOTICE file distributed with
+#  this work for additional information regarding copyright ownership.
+#  The ASF licenses this file to You under the Apache License, Version 2.0
+#  (the "License"); you may not use this file except in compliance with
+#  the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+---
+- name: Configure Elasticsearch - remove stale entries
+  lineinfile: >
+    dest=/etc/sysconfig/elasticsearch
+    regexp="{{ item }}"
+    state=absent
+  with_items:
+    - '^ES_HEAP_SIZE'
+    
+- name: Configure Elasticsearch Heap Size
+  lineinfile:
+    dest: /etc/sysconfig/elasticsearch
+    regexp: "^#ES_HEAP_SIZE"
+    line: "ES_HEAP_SIZE={{elasticsearch_heap_size}}"
+    state: present
+    
+- name: Configure Elasticsearch Max Open Files
+  lineinfile:
+    dest: /usr/lib/systemd/system/elasticsearch.service
+    regexp: "^LimitNOFILE"
+    line: "LimitNOFILE={{ elasticsearch_max_open_files }}"
+    state: present
+    
+- name: Configure limit.conf for max open files by elasticsearch
+  lineinfile: >
+    dest=/etc/security/limits.conf
+    regexp="{{ item.regexp }}"
+    insertafter="{{ item.regexp }}"
+    line="{{ item.line }}"
+    state=present
+  with_items:
+    - { regexp: '^elasticsearch soft', line: 'elasticsearch soft nofile {{ elasticsearch_max_open_files }}' }
+    - { regexp: '^elasticsearch hard', line: 'elasticsearch hard nofile {{ elasticsearch_max_open_files }}' }
+  
+- name: Reload systemctl
+  shell: systemctl daemon-reload

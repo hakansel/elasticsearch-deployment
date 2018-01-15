@@ -1,0 +1,23 @@
+#
+# prerequisites
+#
+- hosts: search
+  become: true
+  roles:
+    - role: common
+  tags:
+    - common
+
+#
+# search
+#
+- hosts: search
+  become: true
+  vars:
+    es_hosts: "{% set comma = joiner(',') %}{% for host in groups['search'] -%}{{ comma() }}{{ host }}{%- endfor %}"
+  roles:
+    - role: elasticsearch
+    - { role: elasticsearch_init, tags: ['elasticsearch_init'] }
+  tags:
+    - elasticsearch
+    
