@@ -1,2 +1,2 @@
-# elasticsearch_deployment
+# elasticsearch-deployment
 Automated and manageable deployment of elasticsearch
