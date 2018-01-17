@@ -14,13 +14,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-[search_master]
-10.10.10.12
+---
+- name: Install monit
+  yum:
+    name: monit
+  register: result
+  until: result.rc == 0
+  retries: 5
+  delay: 10
 
-[search_data]
-10.10.10.13
-10.10.10.14
-
-[search:children]
-search_master
-search_data
+- name: Deploy monit configuration
+  template: src=monitrc dest=/etc/monitrc mode=0600

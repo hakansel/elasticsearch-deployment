@@ -14,13 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-[search_master]
-10.10.10.12
+---
+monit_home: /usr/local/monit
+monit_config_home: /etc/monit.d
+monit_user: admin
+monit_pass: admin
 
-[search_data]
-10.10.10.13
-10.10.10.14
-
-[search:children]
-search_master
-search_data
+elasticsearch_pid_file: /var/run/elasticsearch/elasticsearch.pid

@@ -14,13 +14,21 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-[search_master]
-10.10.10.12
+---
 
-[search_data]
-10.10.10.13
-10.10.10.14
+- name: Download Nodesource Yum Repository Setup
+  shell: wget -O /tmp/nodesource_setup_4.x {{ nodesource_repo_setup }} 
+  # get_url: url={{ nodesource_repo_setup }} dest=/tmp/nodesource_setup_4.x
 
-[search:children]
-search_master
-search_data
+- name: Setup Nodesource Yum Repository
+  shell: bash /tmp/nodesource_setup_4.x
+
+- name: Install Node - Needed for Elasticdump
+  yum: name="{{ item }}"
+  with_items:
+    - gcc-c++
+    - make
+    - nodejs
+
+- name: Install Elasticdump
+  shell: npm install elasticdump -g

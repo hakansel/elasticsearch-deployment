@@ -46,7 +46,7 @@
   with_items:
      - '{{ elasticsearch_data_dir.split(",") }}'
 
-- name: Configure Elasticsearch - remove stale entries
+- name: Configure Cluster Wise Elasticsearch - remove stale entries
   lineinfile: >
     dest=/etc/elasticsearch/elasticsearch.yml
     regexp="{{ item }}"
@@ -55,11 +55,12 @@
     - '^cluster\.name:'
     - '^node\.name:'
     - '^network\.host:'
+    - '^discovery\.zen\.minimum_master_nodes:'
     - '^discovery\.zen\.ping\.unicast\.hosts:'
     - '^path\.data'
     - '^bootstrap\.memory_lock'
 
-- name: Configure Elasticsearch
+- name: Configure Cluster Wise Elasticsearch
   lineinfile: >
     dest=/etc/elasticsearch/elasticsearch.yml
     regexp="{{ item.regexp }}"
@@ -70,10 +71,60 @@
     - { regexp: '^# *cluster\.name:', line: 'cluster.name: {{ elasticsearch_cluster_name }}' }
     - { regexp: '^# *node\.name:', line: "node.name: node-{{ ansible_default_ipv4.address.replace('.','') }}" }
     - { regexp: '^# *network\.host:', line: 'network.host: _{{ elasticsearch_network_interface }}:ipv4_' }
+    - { regexp: '^# *discovery\.zen\.minimum_master_nodes:', line: "discovery.zen.minimum_master_nodes: {{ (((groups['search'] | length)/2 + 1) | int) }}" }
     - { regexp: '^# *discovery\.zen\.ping\.unicast\.hosts:', line: 'discovery.zen.ping.unicast.hosts: [ {{ es_hosts }} ]'}
     - { regexp: '^# *path\.data', line: 'path.data: {{ elasticsearch_data_dir }}' }
-    - { regexp: '^# *bootstrap\.memory_lock', line: 'bootstrap.memory_lock: {{ elasticsearch_is_locked_memory }}' }
-    
+    - { regexp: '^# *bootstrap\.memory_lock', line: 'bootstrap.memory_lock: {{ elasticsearch_is_locked_memory | lower }}' }
+
+- name: Configure Master Node Wise Elasticsearch - remove stale entries
+  lineinfile: >
+    dest=/etc/elasticsearch/elasticsearch.yml
+    regexp="{{ item }}"
+    state=absent
+  with_items:
+    - '^node.master:'
+    - '^node.data:'
+  when: "inventory_hostname in groups['search_master']"
+
+- name: Configure Master Node Wise Elasticsearch
+  lineinfile: >
+    dest=/etc/elasticsearch/elasticsearch.yml
+    regexp="{{ item.regexp }}"
+    insertafter="{{ item.regexp }}"
+    line="{{ item.line }}"
+    state=present
+  with_items:
+    - { regexp: '^# *node\.master:', line: 'node.master: true' }
+    - { regexp: '^# *node\.data:', line: 'node.data: false' }
+  when: "inventory_hostname in groups['search_master']"
+
+# node wise shards and replica settings removed in es 5.0+ verions  
+- name: Configure Data Node Wise Elasticsearch - remove stale entries
+  lineinfile: >
+    dest=/etc/elasticsearch/elasticsearch.yml
+    regexp="{{ item }}"
+    state=absent
+  with_items:
+    - '^node.master:'
+    - '^node.data:'
+    - '^index.number_of_shards:'
+    - '^index.number_of_replicas:'
+  when: "inventory_hostname in groups['search_data']"
+
+- name: Configure Data Node Wise Elasticsearch
+  lineinfile: >
+    dest=/etc/elasticsearch/elasticsearch.yml
+    regexp="{{ item.regexp }}"
+    insertafter="{{ item.regexp }}"
+    line="{{ item.line }}"
+    state=present
+  with_items:
+    - { regexp: '^# *node\.master:', line: 'node.master: true' }
+    - { regexp: '^# *node\.data:', line: 'node.data: true' }
+    - { regexp: '^# *index\.number_of_shards:', line: 'index.number_of_shards: {{ elasticsearch_number_of_shards }}' }
+    - { regexp: '^# *index\.number_of_replicas:', line: 'index.number_of_replicas: {{ elasticsearch_number_of_replicas }}' }
+  when: "inventory_hostname in groups['search_data']"
+      
 - name: Configure Elasticsearch for Elasticsearch Repository
   lineinfile:
     dest: /etc/elasticsearch/elasticsearch.yml 

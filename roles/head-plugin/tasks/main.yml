@@ -14,13 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-[search_master]
-10.10.10.12
-
-[search_data]
-10.10.10.13
-10.10.10.14
-
-[search:children]
-search_master
-search_data
+---
+- name: Check for elasticsearch bin at "{{ elasticsearch_bin_path }}"
+  stat: path="{{ elasticsearch_bin_path }}"
+  register: es_bin_path
+  
+- name: Check for head plugin at "{{ elasticsearch_plugin_path }}/head"
+  stat: path="{{ elasticsearch_plugin_path }}/head"
+  register: head_plugin_path
+  
+- name: Install head-plugin as es plugin
+  command: "{{ elasticsearch_bin_path }}/plugin install mobz/elasticsearch-head"
+  when: (es_bin_path.stat.exists == True) and (head_plugin_path.stat.exists == False)

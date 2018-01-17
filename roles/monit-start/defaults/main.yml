@@ -14,13 +14,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-[search_master]
-10.10.10.12
+---
 
-[search_data]
-10.10.10.13
-10.10.10.14
-
-[search:children]
-search_master
-search_data
+#
+# defines which services will be started.  by default, no services
+# are started
+#
+services_to_start: []

@@ -14,13 +14,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-[search_master]
-10.10.10.12
+---
+- name: Create monit home
+  file: path={{ monit_home }} state=directory mode=0755
 
-[search_data]
-10.10.10.13
-10.10.10.14
-
-[search:children]
-search_master
-search_data
+#
+# Centos 7 specific
+#
+- name: Create monit centos 7 definition for elasticsearch
+  template: src=elasticsearch.monit dest={{ monit_config_home }}/elasticsearch.monit
+  when: ("search" in group_names) and (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7")

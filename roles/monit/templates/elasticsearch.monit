@@ -14,13 +14,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-[search_master]
-10.10.10.12
-
-[search_data]
-10.10.10.13
-10.10.10.14
-
-[search:children]
-search_master
-search_data
+check process elasticsearch with pidfile {{ elasticsearch_pid_file }}
+  start program = "/usr/bin/systemctl start elasticsearch.service"
+  stop program = "/usr/bin/systemctl stop elasticsearch.service"
+  if does not exist then restart
+  group search

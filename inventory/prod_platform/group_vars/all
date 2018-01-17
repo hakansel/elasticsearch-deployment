@@ -14,12 +14,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+# which services should be started with monit?
 
+services_to_start:
+  - elasticsearch
+  
 # java
 java_home: "/usr/jdk64/jdk1.8.0_40"
 
 ## search	
-install_elasticsearch: True
 elasticsearch_cluster_name: hello_cluster
 elasticsearch_transport_port: 9300
 # listen global
@@ -31,3 +34,11 @@ elasticsearch_data_dir: "/data1/elasticsearch,/data2/elasticsearch"
 elasticsearch_max_open_files: 262144
 elasticsearch_is_locked_memory: true
 elasticsearch_heap_size: 31g
+elasticsearch_number_of_shards: 2
+elasticsearch_number_of_replicas: 1
+elasticsearch_bin_path: /usr/share/elasticsearch/bin
+elasticsearch_plugin_path: /usr/share/elasticsearch/plugins
+
+## tools
+# elasticdump
+nodesource_repo_setup: https://rpm.nodesource.com/setup_4.x

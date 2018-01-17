@@ -11,7 +11,7 @@
 #
 # search
 #
-- hosts: search
+- hosts: search_master, search_data
   become: true
   vars:
     es_hosts: "{% set comma = joiner(',') %}{% for host in groups['search'] -%}{{ comma() }}{{ host }}{%- endfor %}"
@@ -21,3 +21,39 @@
   tags:
     - elasticsearch
     
+#
+# elasticdump
+#
+- hosts: search
+  become: true
+  roles:
+    - role: elasticdump
+  tags:
+    - elasticdump
+    
+#
+# head-plugin
+#
+- hosts: search
+  become: true
+  roles:
+    - role: head-plugin
+  tags:
+    - head-plugin
+    
+#
+# monit
+#
+- hosts: search
+  become: true
+  roles:
+    - role: monit
+  tags:
+    - monit
+    
+- hosts: search
+  become: true
+  roles:
+    - role: monit-start
+  tags:
+    - monit-start    
