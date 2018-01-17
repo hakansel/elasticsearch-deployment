@@ -25,7 +25,6 @@
     delay: 10
     timeout: 300
   when: ("{{elasticsearch_network_interface}}" != 'local')
-    
 
 - name: Wait for Index to Become Available
   uri:

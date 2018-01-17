@@ -22,6 +22,15 @@
     state=absent
   with_items:
     - '^ES_HEAP_SIZE'
+    - '^MAX_LOCKED_MEMORY'
+    
+- name: Configure Elasticsearch - remove stale entries
+  lineinfile: >
+    dest=/usr/lib/systemd/system/elasticsearch.service
+    regexp="{{ item }}"
+    state=absent
+  with_items:
+    - '^LimitMEMLOCK'
     
 - name: Configure Elasticsearch Heap Size
   lineinfile:
@@ -30,13 +39,14 @@
     line: "ES_HEAP_SIZE={{elasticsearch_heap_size}}"
     state: present
     
+# Centos 7 (Systemd) specific if system is different it can be setted in /etc/sysconfig/elasticsearch MAX_OPEN_FILES option
 - name: Configure Elasticsearch Max Open Files
   lineinfile:
     dest: /usr/lib/systemd/system/elasticsearch.service
     regexp: "^LimitNOFILE"
     line: "LimitNOFILE={{ elasticsearch_max_open_files }}"
     state: present
-    
+
 - name: Configure limit.conf for max open files by elasticsearch
   lineinfile: >
     dest=/etc/security/limits.conf
@@ -45,8 +55,33 @@
     line="{{ item.line }}"
     state=present
   with_items:
-    - { regexp: '^elasticsearch soft', line: 'elasticsearch soft nofile {{ elasticsearch_max_open_files }}' }
-    - { regexp: '^elasticsearch hard', line: 'elasticsearch hard nofile {{ elasticsearch_max_open_files }}' }
+    - { regexp: '^elasticsearch soft nofile', line: 'elasticsearch soft nofile {{ elasticsearch_max_open_files }}' }
+    - { regexp: '^elasticsearch hard nofile', line: 'elasticsearch hard nofile {{ elasticsearch_max_open_files }}' }
+
+- name: Configure Elasticsearch Max Locked Memory
+  lineinfile:
+    dest: /etc/sysconfig/elasticsearch
+    regexp: "^#MAX_LOCKED_MEMORY"
+    line: "MAX_LOCKED_MEMORY=unlimited"
+    state: present
+
+- name: Configure Elasticsearch Max Locked Memory
+  lineinfile:
+    dest: /usr/lib/systemd/system/elasticsearch.service
+    regexp: "^#LimitMEMLOCK"
+    line: "LimitMEMLOCK=infinity"
+    state: present
+        
+- name: Configure limit.conf for max lock memory by elasticsearch
+  lineinfile: >
+    dest=/etc/security/limits.conf
+    regexp="{{ item.regexp }}"
+    insertafter="{{ item.regexp }}"
+    line="{{ item.line }}"
+    state=present
+  with_items:
+    - { regexp: '^elasticsearch soft memlock', line: 'elasticsearch soft memlock unlimited' }
+    - { regexp: '^elasticsearch hard memlock', line: 'elasticsearch hard memlock unlimited' }
   
 - name: Reload systemctl
   shell: systemctl daemon-reload
