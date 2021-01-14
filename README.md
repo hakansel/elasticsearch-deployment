@@ -11,7 +11,9 @@ also you can apply for only specific tags with
 --tags "<tag_name_2>,<tag_name_2>"
 ```
 or you can skip specific tags with 
-```--skip-tags "<tag_name_2>,<tag_name_2>```
+```
+--skip-tags "<tag_name_2>,<tag_name_2>"
+```
 
 ## TODO:
 * [x] Elasticsearch
